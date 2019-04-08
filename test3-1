@@ -1,0 +1,71 @@
+操作系统实验三
+安全1601         16281078            宋旻
+实验一
+1.进程创建
+要使用多线程，首先需要创建多个线程，于是使用函数pthread_create，其和进程类似的地方是，执行该函数后程序就会产生分支，一方面继续执行调用pthread_create的函数，另一方面开始执行start_routine指定的函数。start_routine究竟是什么？一眼看上去可能不明所以，其实就是你写的一个函数的函数名，比如transfer；如果该函数(transfer)需要参数呢？就通过参数arg构造结构体传入即可。
+​ 和进程创建不同的是，pthread_create的返回值表示是否创建成功，而thread实际上是一个int型的指针，指向存储执行函数start_routine进程的id。示例代码如下，需要注意的是，因为pthread库不是Linux系统默认的库，连接时需要使用库libpthread.a，所以编译时要加-lpthread参数，比如gcc createThread.c -lpthread -o createThread。
+void func1() {
+// TO-DO
+printf(“songmin1\n”);
+}
+
+void func2() {
+// TO-DO
+printf(“songmin2\n”);
+}
+
+void func3() {
+// TO-DO
+printf(“songmin3\n”);
+}
+
+void func4() {
+// TO-DO
+printf(“songmin4\n”);
+}
+
+int main() {
+    pthread_t thid1, thid2,thid3,thid4;
+pthread_create(&thid1, NULL, (void *)func1, NULL);
+pthread_create(&thid2, NULL, (void *)func2, NULL);
+pthread_create(&thid3, NULL, (void *)func3, NULL);
+pthread_create(&thid4, NULL, (void *)func4, NULL);
+	pthread_join(thid1, NULL);
+	pthread_join(thid2, NULL);
+pthread_join(thid3, NULL);
+pthread_join(thid4, NULL);
+    return 0;
+}
+thread_join在很多情况下，子线程里要进行大量的耗时的运算，主线程往往在子线程之前结束。但是，如果主线程需要用到子线程的处理结果，就要用到pthread_join方法了。可以理解为告诉主线程：“执行到这里的时候，停下来等id为thid的线程！”其中thread为等待线程的id，retval用来存储被等待进程的返回值。
+2.线程互斥
+​ 和进程通过信号量完成互斥不同，线程的互斥的实现依靠互斥锁。首先，使用函数pthread_mutex_init(pthread_mutex_t * mutex,const pthread_mutexattr_t*attr)初始化互斥锁，之后在线程函数中使用int pthread_mutex_lock(pthread_mutex_t *mutex)和int pthread_mutex_unlock(pthread_mutex_t*mutex)两个函数进行加锁和解锁（即开始和结束线程对于临界资源的占用），最后使用函数pthread_mutex_destroy(pthread_mutex_t *mutex)销毁一个互斥锁。更改进程23部分如下
+
+pthread_mutex_t mutex;
+
+void func2()
+{
+    pthread_mutex_lock(&mutex);
+    // TO-DO
+    pthread_mutex_unlock(&mutex);
+}
+void func3()
+{
+    pthread_mutex_lock(&mutex);
+    // TO-DO
+    pthread_mutex_unlock(&mutex);
+}
+
+
+int main()
+{
+pthread_t thid1, thid2,thid3,thid4;
+//略
+    pthread_mutex_init(&mutex, NULL);
+    pthread_create(&thid2, NULL, (void *)func2, NULL);
+    pthread_create(&thid3, NULL, (void *)func3, NULL);
+    pthread_join(thid2, NULL);
+    pthread_join(thid3, NULL);
+pthread_mutex_destroy(&mutex);
+//略
+    return 0;
+}
